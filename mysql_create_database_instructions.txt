@@ -1,0 +1,3 @@
+create table patient_records(date datetime NOT NULL, patient varchar(255) NOT NULL, doctor varchar(255) NOT NULL, angular_speed float(10,2) NOT NULL, knee_force float(10,2) NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+insert into patient_records values(now(), 'Joey', 'Colin', 3.2, 4.5)
