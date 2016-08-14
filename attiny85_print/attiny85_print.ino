@@ -1,5 +1,5 @@
 /*
-Program using USBTinyISP
+Program ATTiny85 using USBTinyISP
 TX_PIN -> PB3 (Pin 2)
 
 */
