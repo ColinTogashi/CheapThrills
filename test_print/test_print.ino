@@ -5,49 +5,72 @@ Move to [arduino_dir]/libraries/Manchester
 May need to rename example files so Arduino IDE doesn't throw errors
 
 Program Arduino with Arduino IDE
-Eventually port to ATTiny85 and program with USBTinyISP
 
-RX_PIN -> D10
-TX_PIN -> D11
+Run on ATTiny85 with the following connections:
+RX_PIN_MAN_A -> PB3 -> 415MHz Receiver
+RX_PIN_MAN_B -> PB4 -> 315MHz Receiver
+RX_PIN_SS    -> PB0 -> Disconnected
+TX_PIN_SS    -> PB1 -> RX Serial to USB Converter
+
 
 */
 
 #include <SoftwareSerial.h>
 #include <Manchester.h>
-SoftwareSerial mySerial(10, 11); // RX, TX
+#define RX_PIN_MAN_A 3
+#define RX_PIN_MAN_B 4
+#define RX_PIN_SS 0
+#define TX_PIN_SS 1
+#define BUFFER_SIZE 4 // TODO: Increase buffer size to be size of actual MPU data
 
-#define RX_PIN 10
-#define TX_PIN 11
-#define BUFFER_SIZE 4
-uint8_t buffer[BUFFER_SIZE];
+SoftwareSerial mySerial(RX_PIN_SS, RX_PIN_SS); // RX, TX
+Manchester manA;
+Manchester manB;
+uint8_t bufferA[BUFFER_SIZE];
+uint8_t bufferB[BUFFER_SIZE];
+uint8_t receivedSizeA;
+uint8_t receivedSizeB;
 
 
 void setup()  
 {
-  // Open serial communications and wait for port to open:
-  Serial.begin(9600);
-  //mySerial.begin(9600);
-  man.setupReceive(RX_PIN, MAN_9600);
-  man.beginReceiveArray(BUFFER_SIZE, buffer);
-  Serial.println("Running");
+    // Open serial communications and wait for port to open:
+    mySerial.begin(9600);
+    manA.setupReceive(RX_PIN_MAN_A, MAN_9600);
+    manB.setupReceive(RX_PIN_MAN_B, MAN_9600);
+    manA.beginReceiveArray(BUFFER_SIZE, bufferA);
+    manB.beginReceiveArray(BUFFER_SIZE, bufferB);
 }
 
 void loop() // run over and over
 {
-  if (man.receiveComplete())
-  {
-    uint8_t receivedSize = 0;
-    receivedSize = buffer[0];
-    for (uint8_t i=1; i<receivedSize; i++)
+    if (manA.receiveComplete())
     {
-         Serial.write(buffer[i]);
-         //mySerial.write(buffer[i]);
+        receivedSizeA = 0;
+        receivedSizeA = bufferA[0];
+        for (uint8_t i=1; i<receivedSizeA; i++)
+        {
+            // Serial.write(bufferA[i]);
+            mySerial.write(bufferA[i]);
+        }
+        //Serial.println();
+        mySerial.println();
+    
+        manA.beginReceiveArray(BUFFER_SIZE, bufferA);
     }
-    Serial.println();
-    //mySerial.println();
+    if (manB.receiveComplete())
+    {
+        receivedSizeB = 0;
+        receivedSizeB = bufferB[0];
+        for (uint8_t i=1; i<receivedSizeB; i++)
+        {
+            // Serial.write(bufferB[i]);
+            mySerial.write(bufferB[i]);
+        }
+        //Serial.println();
+        mySerial.println();
     
-    man.beginReceiveArray(BUFFER_SIZE, buffer);
-    
-  }
+        manB.beginReceiveArray(BUFFER_SIZE, bufferB);
+    }
 }
 
